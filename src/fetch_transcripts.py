@@ -14,11 +14,11 @@ from common_cache import should_retry, record_failed_attempt, record_successful_
 setup_logging(script_name="fetch_transcripts")
 
 TRANSCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "../output/transcripts")
-VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/playlist_videos.csv")
-#VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/channel_videos.csv")
+#VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/playlist_videos.csv")
+VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/channel_videos.csv")
 
 LANGUAGE_CODES = ['pl']
-MAX_WORKERS = 10
+MAX_WORKERS = 2
 
 os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 
@@ -91,7 +91,7 @@ def process_video(video):
     video_id, channel_id, channel_name, published_at = video
 
     if not should_retry(video_id): # failed download caching: check
-        return channel_name, False, f"🚫 Skipping {video_id} - too many failed attempts."
+        return channel_name, False, f"🚫 Skipping {video_id} from {channel_name} ({channel_id}) published at {published_at} - too many failed attempts."
 
     transcript_path = os.path.join(TRANSCRIPTS_DIR, sanitize_filename(channel_id), f"{video_id}.txt")
 
