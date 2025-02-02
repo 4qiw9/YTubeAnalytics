@@ -14,11 +14,10 @@ from common_cache import should_retry, record_failed_attempt, record_successful_
 setup_logging(script_name="fetch_transcripts")
 
 TRANSCRIPTS_DIR = os.path.join(os.path.dirname(__file__), "../output/transcripts")
-#VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/playlist_videos.csv")
-VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/channel_videos.csv")
+VIDEO_CSV_PATH = os.path.join(os.path.dirname(__file__), "../output/analyze_list.csv")
 
 LANGUAGE_CODES = ['pl']
-MAX_WORKERS = 2
+MAX_WORKERS = 5
 
 os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
 

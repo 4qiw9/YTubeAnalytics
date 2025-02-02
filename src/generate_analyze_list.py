@@ -13,13 +13,12 @@ CHANNEL_VIDEOS_CSV = os.path.join(BASE_DIR, "output", "channel_videos.csv")
 PLAYLIST_VIDEOS_CSV = os.path.join(BASE_DIR, "output", "playlist_videos.csv")
 OUTPUT_CSV = os.path.join(BASE_DIR, "output", "analyze_list.csv")
 
-DEFAULT_KEYWORDS = ["Paszyk"]
+DEFAULT_KEYWORDS = None
 DEFAULT_CHANNELS = None
-DEFAULT_START_DATE = None
+DEFAULT_START_DATE = "2024-01-01"
 DEFAULT_END_DATE = None
 
 def load_video_data():
-    """Loads video data from CSV files (channels & playlists)"""
     logging.info("🔄 Loading video lists...")
     df_channels = pd.read_csv(CHANNEL_VIDEOS_CSV, dtype=str) if os.path.exists(CHANNEL_VIDEOS_CSV) else pd.DataFrame()
     df_playlists = pd.read_csv(PLAYLIST_VIDEOS_CSV, dtype=str) if os.path.exists(
@@ -35,10 +34,9 @@ def load_video_data():
 
 
 def filter_videos(df, keywords, channels, start_date, end_date):
-    """Filters videos based on keywords (in title or description), channels, and date range"""
     conditions = []
 
-    # 🔹 Filter by keywords (title OR description)
+    # Filter by keywords (title OR description)
     if keywords:
         keyword_pattern = "|".join(keywords)
         keyword_condition = (
@@ -47,22 +45,22 @@ def filter_videos(df, keywords, channels, start_date, end_date):
         )
         conditions.append(keyword_condition)
 
-    # 🔹 Filter by channel names
+    # Filter by channel names
     if channels:
         channel_condition = df["channel_name"].isin(channels)
         conditions.append(channel_condition)
 
-    # 🔹 Filter by date range
+    # Filter by date range
     if start_date:
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        df["published_at"] = pd.to_datetime(df["published_at"], errors="coerce")
+        df["published_at"] = pd.to_datetime(df["published_at"], errors="coerce").dt.tz_localize(None)
         conditions.append(df["published_at"] >= start_date)
 
     if end_date:
         end_date = datetime.strptime(end_date, "%Y-%m-%d")
         conditions.append(df["published_at"] <= end_date)
 
-    # 🔹 Apply all filters
+    # Apply all filters
     if conditions:
         df_filtered = df.loc[pd.concat(conditions, axis=1).all(axis=1)]
     else:
@@ -73,7 +71,6 @@ def filter_videos(df, keywords, channels, start_date, end_date):
 
 
 def generate_analyze_list(keywords, channels, start_date, end_date, output_csv):
-    """Generates a filtered list of videos for analysis"""
     df = load_video_data()
     if df is None:
         return

@@ -65,7 +65,7 @@ def save_failed_cache():
     with _failed_cache_lock:
         with open(FAILED_CACHE_FILE, "w", encoding="utf-8") as file:
             json.dump(_failed_cache, file, indent=4)
-            logging.info("📝 Failed transcripts downloads cache updated")
+            logging.info("Transcripts downloads cache updated")
 
 def save_failed_cache_periodically():
     while True:
