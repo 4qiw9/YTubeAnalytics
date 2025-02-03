@@ -14,8 +14,8 @@ PLAYLIST_VIDEOS_CSV = os.path.join(BASE_DIR, "output", "playlist_videos.csv")
 OUTPUT_CSV = os.path.join(BASE_DIR, "output", "analyze_list.csv")
 
 DEFAULT_KEYWORDS = None
-DEFAULT_CHANNELS = None
-DEFAULT_START_DATE = "2024-01-01"
+DEFAULT_CHANNELS = ["Radio ZET"]
+DEFAULT_START_DATE = "2025-01-29"
 DEFAULT_END_DATE = None
 
 def load_video_data():

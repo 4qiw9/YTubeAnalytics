@@ -13,8 +13,8 @@ setup_logging(script_name="common_cache")
 CACHE_FILE = os.path.join(os.path.dirname(__file__), "../output/cache.json")
 
 FAILED_CACHE_FILE = os.path.join(os.path.dirname(__file__), "../output/failed_transcripts.json")
-MAX_ATTEMPTS = 5
-WAIT_TIME = [0, 60, 3600, 86400, 86400] # minimal seconds wait time between attempts (86400 = 24h)
+MAX_ATTEMPTS = 6
+WAIT_TIME = [0, 60, 3600, 86400, 86400, 86400] # minimal seconds wait time between attempts (86400 = 24h)
 
 # Global caching, only for failed download cache
 _failed_cache = {}

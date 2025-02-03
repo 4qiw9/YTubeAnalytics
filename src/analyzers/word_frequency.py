@@ -5,9 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
 from wordcloud import WordCloud
-from src.analyzers.base_analyzer import BaseAnalyzer
+from src.analyzers.stanza_base_analyzer import StanzaBaseAnalyzer
 
-class WordFrequencyAnalyzer(BaseAnalyzer):
+class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
     def __init__(self,
                  analyze_list_csv, transcripts_dir,
                  output_csv,

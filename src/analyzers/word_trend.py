@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.cm as cm
 from collections import defaultdict
-from src.analyzers.base_analyzer import BaseAnalyzer
+from src.analyzers.stanza_base_analyzer import StanzaBaseAnalyzer
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
-class WordTrendAnalyzer(BaseAnalyzer):
+class WordTrendAnalyzer(StanzaBaseAnalyzer):
     def __init__(self,
                  analyze_list_csv, transcripts_dir,
                  output_csv,
