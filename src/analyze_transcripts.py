@@ -11,11 +11,11 @@ setup_logging()
 # Script setup
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
-DEFAULT_INPUT_CSV = os.path.join(OUTPUT_DIR, "analyze_list.csv")
+DEFAULT_INPUT_CSV = os.path.join(OUTPUT_DIR, "analyze_list_midel.csv")
 DEFAULT_TRANSCRIPTS_DIR = os.path.join(OUTPUT_DIR, "transcripts")
 DEFAULT_FREQ_CSV = os.path.join(OUTPUT_DIR, "word_frequencies.csv")
 DEFAULT_TREND_CSV = os.path.join(OUTPUT_DIR, "word_trends.csv")
-DEFAULT_MODE = "trend"
+DEFAULT_MODE = "frequency"
 DEFAULT_TOP = 50
 DEFAULT_MIN_LENGTH = 3
 

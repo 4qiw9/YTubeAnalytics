@@ -15,7 +15,8 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
                  top_n=50,
                  min_length=3,
                  output_plots="/output/plots",
-                 num_threads=8  # ✅ Number of threads for parallel processing
+                 num_threads=4,  # ✅ Number of threads for parallel processing
+                 cache_nlp_results=True  # ✅ Cache NLP results
                  ):
         super().__init__(analyze_list_csv, transcripts_dir)
         self.output_csv = output_csv
@@ -23,6 +24,8 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
         self.min_length = min_length
         self.output_plots = os.path.abspath(output_plots)
         self.num_threads = num_threads  # ✅ Store the number of threads
+        self.cache_nlp_results = cache_nlp_results
+        self.nlp_cache_file = output_csv.replace(".csv", "_nlp.csv")  # ✅ Cached NLP data file
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
         if output_plots.startswith("/"):
@@ -33,30 +36,38 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
         os.makedirs(self.output_plots, exist_ok=True)
 
     def analyze(self):
-        transcripts = self.load_transcripts()
-        if not transcripts:
-            logging.error("Missing all transcripts!")
-            return
+        if self.cache_nlp_results and os.path.exists(self.nlp_cache_file):
+            logging.info(f"✅ Loading cached NLP results from {self.nlp_cache_file}")
+            df = pd.read_csv(self.nlp_cache_file)
+        else:
+            transcripts = self.load_transcripts()
+            if not transcripts:
+                logging.error("Missing all transcripts!")
+                return
 
-        texts = [t[2] for t in transcripts]
-        logging.info(f"🔄 Starting NLP with {self.num_threads} threads...")
-        start_time = time.time()
-        all_words = self.parallel_clean_text(texts)  # ✅ Parallel processing
-        total_time = time.time() - start_time
-        logging.info(f"✅ Finished NLP processing in {total_time:.2f}s. Found {len(all_words)} words.")
+            texts = [t[2] for t in transcripts]
+            logging.info(f"🔄 Starting NLP with {self.num_threads} threads...")
+            start_time = time.time()
+            all_words = self.parallel_clean_text(texts)  # ✅ Parallel processing
+            total_time = time.time() - start_time
+            logging.info(f"✅ Finished NLP processing in {total_time:.2f}s. Found {len(all_words)} words.")
 
-        word_counts = Counter(all_words)
-        most_common_words = word_counts.most_common(self.top_n)
+            word_counts = Counter(all_words)
+            df = pd.DataFrame(word_counts.items(), columns=["word", "count"])
+            df.to_csv(self.nlp_cache_file, index=False, encoding="utf-8")
+            logging.info(f"✅ Cached NLP results saved to {self.nlp_cache_file}")
 
-        df = pd.DataFrame(most_common_words, columns=["word", "count"])
-        df.to_csv(self.output_csv, index=False, encoding="utf-8")
+        # ✅ Now filter for top_n words only for visualization
+        df_sorted = df.sort_values(by="count", ascending=False)
+        df_sorted.to_csv(self.output_csv, index=False, encoding="utf-8")
+        logging.info(f"✅ Word frequency analysis saved to {self.output_csv}")
 
-        logging.info(f"Word frequency analysis saved to {self.output_csv}")
-
+        word_counts = dict(zip(df_sorted["word"], df_sorted["count"]))
         self.generate_wordcloud(word_counts)
-        self.plot_top_words(most_common_words)
+        self.plot_top_words(df_sorted.head(self.top_n).values.tolist())
 
     def parallel_clean_text(self, texts):
+        """Splits texts into chunks and processes them in parallel."""
         chunk_size = max(1, len(texts) // self.num_threads)
         chunks = [texts[i:i + chunk_size] for i in range(0, len(texts), chunk_size)]
 
