@@ -1,10 +1,11 @@
 import logging
 import os
-
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
 from wordcloud import WordCloud
+from concurrent.futures import ThreadPoolExecutor
+import time
 from src.analyzers.stanza_base_analyzer import StanzaBaseAnalyzer
 
 class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
@@ -13,13 +14,15 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
                  output_csv,
                  top_n=50,
                  min_length=3,
-                 output_plots="/output/plots"
+                 output_plots="/output/plots",
+                 num_threads=8  # ✅ Number of threads for parallel processing
                  ):
         super().__init__(analyze_list_csv, transcripts_dir)
         self.output_csv = output_csv
         self.top_n = top_n
         self.min_length = min_length
         self.output_plots = os.path.abspath(output_plots)
+        self.num_threads = num_threads  # ✅ Store the number of threads
 
         base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
         if output_plots.startswith("/"):
@@ -36,7 +39,11 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
             return
 
         texts = [t[2] for t in transcripts]
-        all_words = self.clean_text(texts)
+        logging.info(f"🔄 Starting NLP with {self.num_threads} threads...")
+        start_time = time.time()
+        all_words = self.parallel_clean_text(texts)  # ✅ Parallel processing
+        total_time = time.time() - start_time
+        logging.info(f"✅ Finished NLP processing in {total_time:.2f}s. Found {len(all_words)} words.")
 
         word_counts = Counter(all_words)
         most_common_words = word_counts.most_common(self.top_n)
@@ -48,6 +55,25 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
 
         self.generate_wordcloud(word_counts)
         self.plot_top_words(most_common_words)
+
+    def parallel_clean_text(self, texts):
+        chunk_size = max(1, len(texts) // self.num_threads)
+        chunks = [texts[i:i + chunk_size] for i in range(0, len(texts), chunk_size)]
+
+        total_chunks = len(chunks)
+        start_time = time.time()
+
+        with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
+            results = []
+            for i, result in enumerate(executor.map(self.clean_text, chunks), 1):
+                results.append(result)
+                elapsed_time = time.time() - start_time
+                estimated_total_time = (elapsed_time / i) * total_chunks
+                remaining_time = estimated_total_time - elapsed_time
+                logging.info(f"🔄 Processed {i}/{total_chunks} chunks ({(i/total_chunks)*100:.2f}%) | Elapsed: {elapsed_time:.2f}s | ETA: {remaining_time:.2f}s")
+
+        # Flatten the results
+        return [word for sublist in results for word in sublist]
 
     def generate_wordcloud(self, word_counts):
         wordcloud = WordCloud(width=800, height=400, background_color="white").generate_from_frequencies(word_counts)
@@ -65,7 +91,6 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
 
         # then close
         plt.close()
-
 
     def plot_top_words(self, most_common_words):
         words, counts = zip(*most_common_words)
@@ -85,7 +110,3 @@ class WordFrequencyAnalyzer(StanzaBaseAnalyzer):
 
         # then close
         plt.close()
-
-
-
-

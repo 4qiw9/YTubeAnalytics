@@ -42,7 +42,7 @@ class BaseAnalyzer:
 
             if (idx + 1) % 10 == 0 or idx + 1 == total_files:
                 elapsed_time = time.time() - start_time
-                logging.info(f"📊 Processesd {idx + 1}/{total_files} filed ({elapsed_time:.2f} s)")
+                logging.info(f"📊 Processesd {idx + 1}/{total_files} files ({elapsed_time:.2f} s)")
 
         return transcripts
 

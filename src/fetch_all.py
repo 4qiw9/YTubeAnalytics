@@ -33,7 +33,7 @@ def fetch_all_channels():
     channels = load_ids(CHANNELS_FILE)
     for channel_id in channels:
         logging.info(f"Fetching videos from channel: {channel_id}")
-        fetch_videos_from_channel(channel_id, os.path.join(OUTPUT_DIR, "channel_videos.csv"))
+        fetch_videos_from_channel(channel_id, os.path.join(OUTPUT_DIR, "midel.csv"))
 
 def fetch_all_playlists():
     playlists = load_ids(PLAYLISTS_FILE)

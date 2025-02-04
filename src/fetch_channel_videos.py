@@ -32,27 +32,41 @@ def fetch_videos_from_channel(channel_identifier, output_file):
         else:
             raise ValueError(f"Channel with ID '{channel_id}' not found.")
 
-    request = youtube.search().list(
-        part="snippet",
-        channelId=channel_id,
-        maxResults=50,
-        type="video",
-        order="date",
-        publishedAfter=last_fetched_date if last_fetched_date else None  # Download only newest videos to save API limits
+    # Find ID of hidden "Uploads" playlist
+    # cannot catch data directly from channel because it's limited to ~500 records
+    request = youtube.channels().list(
+        part="contentDetails",
+        id=channel_id
     )
+    response = request.execute()
+
+    if "items" not in response or not response["items"]:
+        raise ValueError(f"Failed to retrieve 'Uploads' playlist for {channel_name}")
+
+    uploads_playlist_id = response["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
+    logging.info(f"Uploads playlist ID for {channel_name}: {uploads_playlist_id}")
+
+    # Fetching all videos for "Uploads" playlist
+    request = youtube.playlistItems().list(
+        part="snippet",
+        playlistId=uploads_playlist_id,
+        maxResults=50
+    )
+
     while request:
         response = request.execute()
-        for item in response['items']:
+        for item in response.get("items", []):
+            snippet = item["snippet"]
             video_data = {
-                "video_id": item['id']['videoId'],
-                "title": item['snippet']['title'],
-                "description": item['snippet']['description'],
-                "published_at": item['snippet']['publishedAt'],
+                "video_id": snippet["resourceId"]["videoId"],
+                "title": snippet["title"],
+                "description": snippet["description"],
+                "published_at": snippet["publishedAt"],
                 "channel_id": channel_id,
                 "channel_name": channel_name,
             }
             videos.append(video_data)
-        request = youtube.search().list_next(request, response)
+        request = youtube.playlistItems().list_next(request, response)
 
     headers = ["video_id", "title", "description", "published_at", "channel_id", "channel_name"]
     save_to_csv(output_file, videos, headers=headers)
